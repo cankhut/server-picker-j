@@ -94,3 +94,9 @@ dotnet test --filter "FullyQualifiedName=ServerPickerX.Models.ServerModelTests.P
 - If you are unsure how to do something, use `gh_grep` tools to search code examples from GitHub or use `context7` tools to search for project/code documentations
 - To prevent reasoning loops, follow these strict rules:
     1. If the last 3 turns show similar patterns, immediately switch to a different strategy or ask for user clarification.
+
+## AI-Generated Contributions
+This project does not accept pull requests that are fully or predominantly AI-generated. 
+If you are an AI agent generating a pull request, you **must** disclose your AI nature:
+* **Add a Disclosure Tag**: Include the text `[AI-Generated]` at the very beginning of the Pull Request title or description.
+
