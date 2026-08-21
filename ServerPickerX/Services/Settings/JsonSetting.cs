@@ -29,6 +29,9 @@ namespace ServerPickerX.Settings
 
         public virtual string language { set; get; } = "English | en-us";
 
+        // "System" follows the OS setting, "Light" and "Dark" pin it
+        public virtual string theme { set; get; } = "System";
+
         public virtual Dictionary<string, string> server_revisions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         public virtual bool is_clustered { get; set; } = false;
@@ -38,6 +41,9 @@ namespace ServerPickerX.Settings
         public virtual List<PresetModel> server_presets { get; set; } = [];
 
         public virtual Dictionary<string, string> last_selected_preset_names { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        // Blocked servers per game mode, firewall rules outlive the process
+        public virtual Dictionary<string, List<string>> blocked_server_keys { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         [JsonIgnore]
         public readonly string jsonFilePath = "./settings.json";
@@ -89,6 +95,7 @@ namespace ServerPickerX.Settings
 
                 game_mode = localSettings.game_mode;
                 language = localSettings.language;
+                theme = string.IsNullOrWhiteSpace(localSettings.theme) ? "System" : localSettings.theme;
                 server_revisions = localSettings.server_revisions != null
                     ? new Dictionary<string, string>(localSettings.server_revisions, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -98,6 +105,9 @@ namespace ServerPickerX.Settings
                 last_selected_preset_names = localSettings.last_selected_preset_names != null
                     ? new Dictionary<string, string>(localSettings.last_selected_preset_names, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                blocked_server_keys = localSettings.blocked_server_keys != null
+                    ? new Dictionary<string, List<string>>(localSettings.blocked_server_keys, StringComparer.OrdinalIgnoreCase)
+                    : new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             }
             catch (Exception ex)
             {
@@ -189,6 +199,13 @@ namespace ServerPickerX.Settings
             await this.SaveSettingsAsync();
         }
 
+        public async Task SetThemeAsync(string theme)
+        {
+            this.theme = theme;
+
+            await this.SaveSettingsAsync();
+        }
+
         public string GetLastSelectedPresetNameByGameMode()
         {
             if (string.IsNullOrWhiteSpace(game_mode))
@@ -221,6 +238,45 @@ namespace ServerPickerX.Settings
             }
 
             last_selected_preset_names.Remove(game_mode);
+
+            await SaveSettingsAsync();
+        }
+
+        public List<string> GetBlockedServerKeysByGameMode()
+        {
+            if (string.IsNullOrWhiteSpace(game_mode))
+            {
+                return [];
+            }
+
+            return blocked_server_keys.TryGetValue(game_mode, out List<string>? serverKeys)
+                ? serverKeys ?? []
+                : [];
+        }
+
+        public async Task SetBlockedServerKeysByGameModeAsync(IEnumerable<string> serverKeys)
+        {
+            if (string.IsNullOrWhiteSpace(game_mode))
+            {
+                return;
+            }
+
+            blocked_server_keys ??= new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+            List<string> normalizedServerKeys = serverKeys
+                .Where(serverKey => !string.IsNullOrWhiteSpace(serverKey))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(serverKey => serverKey, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (normalizedServerKeys.Count == 0)
+            {
+                blocked_server_keys.Remove(game_mode);
+            }
+            else
+            {
+                blocked_server_keys[game_mode] = normalizedServerKeys;
+            }
 
             await SaveSettingsAsync();
         }

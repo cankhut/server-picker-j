@@ -27,7 +27,6 @@ namespace ServerPickerX
 #if DEBUG
                 .WithDeveloperTools()
 #endif
-                .WithInterFont()
                 .LogToTrace();
         }
     }

@@ -1,4 +1,4 @@
-<Application xmlns="https://github.com/avaloniaui"
+﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="ServerPickerX.App"
              xmlns:local="using:ServerPickerX"
@@ -11,6 +11,8 @@
     <Application.Resources>
 		<ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+				<!-- Locale swapping only removes dictionaries with a LanguageCode key -->
+				<ResourceInclude Source="/Styles/Palette.axaml" />
 				<ResourceInclude Source="/Locales/Locale_en-us.axaml" />
 				<ResourceInclude Source="/Locales/Locale_es-es.axaml" />
 				<ResourceInclude Source="/Locales/Locale_zh-cn.axaml" />
@@ -27,10 +29,13 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <StyleInclude Source="/Styles/BaseStyle.axaml" />
         <StyleInclude Source="/Styles/TitleBarButtonStyle.axaml" />
         <StyleInclude Source="/Styles/MainButtonStyle.axaml" />
         <StyleInclude Source="/Styles/TextBoxStyle.axaml" />
         <StyleInclude Source="/Styles/ComboBoxStyle.axaml" />
         <StyleInclude Source="/Styles/DataGridStyle.axaml" />
+        <!-- Must stay after BaseStyle so blocked card setters win over metric tiers -->
+        <StyleInclude Source="/Styles/ServerCardStyle.axaml" />
     </Application.Styles>
 </Application>
