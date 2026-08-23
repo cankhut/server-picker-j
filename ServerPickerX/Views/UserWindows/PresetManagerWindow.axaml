@@ -57,6 +57,7 @@
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition />
                         </Grid.RowDefinitions>
 
@@ -89,8 +90,28 @@
                                 Click="ApplyBtn_Click" />
                         </Grid>
 
+                        <Grid Grid.Row="1" ColumnDefinitions="*,6,*" Margin="0,6,0,0">
+                            <Button
+                                Grid.Column="0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Classes="main-btn"
+                                Content="{DynamicResource PresetShare}"
+                                ToolTip.Tip="{DynamicResource PresetShareToolTip}"
+                                IsEnabled="{Binding CanApply}"
+                                Click="ShareBtn_Click" />
+                            <Button
+                                Grid.Column="2"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Classes="main-btn"
+                                Content="{DynamicResource PresetImport}"
+                                ToolTip.Tip="{DynamicResource PresetImportToolTip}"
+                                Click="ImportBtn_Click" />
+                        </Grid>
+
                         <DataGrid
-                            Grid.Row="1"
+                            Grid.Row="2"
                             x:Name="PresetListGrid"
                             Classes="preset-grid"
                             AutoGenerateColumns="False"

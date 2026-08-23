@@ -56,6 +56,49 @@ public partial class SettingsWindow : Window
         ThemeComboBox.SelectionChanged -= ThemeComboBox_SelectionChanged;
         ThemeComboBox.SelectedIndex = GetThemeIndex(_jsonSetting.theme);
         ThemeComboBox.SelectionChanged += ThemeComboBox_SelectionChanged;
+
+        AutoRefreshComboBox.SelectionChanged -= AutoRefreshComboBox_SelectionChanged;
+        AutoRefreshComboBox.SelectedIndex = GetAutoRefreshIndex(_jsonSetting.auto_refresh_minutes);
+        AutoRefreshComboBox.SelectionChanged += AutoRefreshComboBox_SelectionChanged;
+
+        MinimizeToTraySetting.IsChecked = _jsonSetting.minimize_to_tray;
+    }
+
+    private async void AutoRefreshComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (AutoRefreshComboBox is null) return;
+
+        int minutes = AutoRefreshComboBox.SelectedIndex switch
+        {
+            1 => 5,
+            2 => 15,
+            3 => 30,
+            _ => 0,
+        };
+
+        await _jsonSetting.SetAutoRefreshMinutesAsync(minutes);
+
+        Views.MainWindow.Instance?.ConfigureAutoRefresh();
+    }
+
+    private static int GetAutoRefreshIndex(int minutes)
+    {
+        return minutes switch
+        {
+            5 => 1,
+            15 => 2,
+            30 => 3,
+            _ => 0,
+        };
+    }
+
+    private async void MinimizeToTraySetting_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        bool enabled = MinimizeToTraySetting.IsChecked == true;
+
+        await _jsonSetting.SetMinimizeToTrayAsync(enabled);
+
+        Views.MainWindow.Instance?.ConfigureTrayIcon();
     }
 
     private async void ThemeComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)

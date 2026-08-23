@@ -3,29 +3,33 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d"
+             mc:Ignorable="d" 
              x:Class="ServerPickerX.TitleBarButtons">
-    <StackPanel HorizontalAlignment="Right"
-                VerticalAlignment="Stretch"
-                Orientation="Horizontal">
-        <Button Name="MinimizeBtn"
-                Classes="titlebar-btn minimize-btn"
-                i:Attached.Icon="mdi-window-minimize"
-                Width="42"
-                Height="32"
-                Click="MinimizeBtn_Click" />
-        <Button Name="MaximizeBtn"
-                Classes="titlebar-btn maximize-btn"
-                i:Attached.Icon="mdi-window-maximize"
-                Width="42"
-                Height="32"
-                Click="MaximizeBtn_Click" />
-        <Button Name="CloseBtn"
-                Classes="titlebar-btn close-btn"
-                i:Attached.Icon="mdi-window-close"
-                FontSize="15"
-                Width="42"
-                Height="32"
-                Click="CloseBtn_Click" />
+    <StackPanel
+        HorizontalAlignment="Right"
+        VerticalAlignment="Stretch"
+        Orientation="Horizontal">
+        <Button
+            Name="MinimizeBtn"
+            Classes="titlebar-btn minimize-btn"
+            i:Attached.Icon="mdi-window-minimize" 
+            Width="42"
+            Height="32"
+            Click="MinimizeBtn_Click" />
+        <Button
+            Name="MaximizeBtn"
+            Classes="titlebar-btn maximize-btn"
+            i:Attached.Icon="mdi-window-maximize" 
+            Width="42"
+            Height="32"
+            Click="MaximizeBtn_Click" />
+        <Button
+            Name="CloseBtn"
+            Classes="titlebar-btn close-btn"
+            i:Attached.Icon="mdi-window-close" 
+            FontSize="15"
+            Width="42"
+            Height="32"
+            Click="CloseBtn_Click" />
     </StackPanel>
 </UserControl>

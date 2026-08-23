@@ -15,6 +15,11 @@ namespace ServerPickerX.Services.Versions
 {
     public class VersionService : IVersionService
     {
+        // This fork publishes its own builds, so updates are checked against it
+        private const string ReleasesApiUrl = "https://api.github.com/repos/cankhut/server-picker-x/releases";
+
+        private const string ReleasesPageUrl = "https://github.com/cankhut/server-picker-x/releases";
+
         private readonly ILoggerService _logger;
         private readonly IMessageBoxService _messageBoxService;
         private readonly ILocalizationService _localizationService;
@@ -43,11 +48,15 @@ namespace ServerPickerX.Services.Versions
                 return;
             }
 
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "server-picker-x");
+            // The client is a singleton, adding the header twice throws
+            if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
+            {
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", "server-picker-x");
+            }
 
             try
             {
-                var res = await _httpClient.GetStreamAsync("https://api.github.com/repositories/1141835010/releases");
+                var res = await _httpClient.GetStreamAsync(ReleasesApiUrl);
 
                 if (res == null)
                 {
@@ -65,10 +74,16 @@ namespace ServerPickerX.Services.Versions
                     return;
                 }
 
-                string assemblyVersion = Assembly.GetEntryAssembly()!.GetName()!.Version!.ToString(3);
+                if (!TryParseReleaseVersion(jsonArray[0]!["tag_name"]!.ToString(), out Version? latestVersion))
+                {
+                    return;
+                }
 
-                // version is up to date
-                if (assemblyVersion == jsonArray[0]!["tag_name"]!.ToString().Split("v")[1])
+                Version currentVersion = new(Assembly.GetEntryAssembly()!.GetName()!.Version!.ToString(3));
+
+                // Compared as versions rather than strings, so a tag suffix such as
+                // "-cardui.1" cannot make an up to date build look outdated
+                if (latestVersion <= currentVersion)
                 {
                     return;
                 }
@@ -77,7 +92,7 @@ namespace ServerPickerX.Services.Versions
                 await _messageBoxService.ShowMessageBoxWithLinkAsync(
                         _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
                         _localizationService.GetLocaleValue("NewVersionDialogue"),
-                        "https://github.com/FN-FAL113/server-picker-x/releases"
+                        ReleasesPageUrl
                     );
             }
             catch (Exception ex)
@@ -86,6 +101,23 @@ namespace ServerPickerX.Services.Versions
 
                 await _messageBoxService.ShowMessageBoxAsync("Error", ex.Message);
             }
+        }
+
+        // Accepts tags like "v1.2.0" and "v1.2.0-cardui.1", comparing only the numbers
+        private static bool TryParseReleaseVersion(string tagName, out Version? version)
+        {
+            version = null;
+
+            string trimmedTag = tagName.Trim().TrimStart('v', 'V');
+
+            int suffixIndex = trimmedTag.IndexOfAny(new[] { '-', '+' });
+
+            if (suffixIndex >= 0)
+            {
+                trimmedTag = trimmedTag[..suffixIndex];
+            }
+
+            return Version.TryParse(trimmedTag, out version);
         }
     }
 }

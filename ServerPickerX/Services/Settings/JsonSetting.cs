@@ -45,6 +45,15 @@ namespace ServerPickerX.Settings
         // Blocked servers per game mode, firewall rules outlive the process
         public virtual Dictionary<string, List<string>> blocked_server_keys { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+        // Last successful reading per server as "ping|loss", kept so a blocked server
+        // still has something to sort by, since no probe of it can succeed
+        public virtual Dictionary<string, Dictionary<string, string>> last_server_readings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        // Minutes between automatic re-pings, 0 disables the timer
+        public virtual int auto_refresh_minutes { get; set; } = 0;
+
+        public virtual bool minimize_to_tray { get; set; } = false;
+
         [JsonIgnore]
         public readonly string jsonFilePath = "./settings.json";
 
@@ -105,6 +114,11 @@ namespace ServerPickerX.Settings
                 last_selected_preset_names = localSettings.last_selected_preset_names != null
                     ? new Dictionary<string, string>(localSettings.last_selected_preset_names, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                auto_refresh_minutes = localSettings.auto_refresh_minutes;
+                minimize_to_tray = localSettings.minimize_to_tray;
+                last_server_readings = localSettings.last_server_readings != null
+                    ? new Dictionary<string, Dictionary<string, string>>(localSettings.last_server_readings, StringComparer.OrdinalIgnoreCase)
+                    : new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
                 blocked_server_keys = localSettings.blocked_server_keys != null
                     ? new Dictionary<string, List<string>>(localSettings.blocked_server_keys, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
@@ -238,6 +252,53 @@ namespace ServerPickerX.Settings
             }
 
             last_selected_preset_names.Remove(game_mode);
+
+            await SaveSettingsAsync();
+        }
+
+        public Dictionary<string, string> GetServerReadingsByGameMode()
+        {
+            if (string.IsNullOrWhiteSpace(game_mode))
+            {
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            return last_server_readings.TryGetValue(game_mode, out Dictionary<string, string>? readings) && readings != null
+                ? new Dictionary<string, string>(readings, StringComparer.OrdinalIgnoreCase)
+                : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public async Task SetServerReadingsByGameModeAsync(Dictionary<string, string> readings)
+        {
+            if (string.IsNullOrWhiteSpace(game_mode))
+            {
+                return;
+            }
+
+            last_server_readings ??= new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+
+            if (readings.Count == 0)
+            {
+                last_server_readings.Remove(game_mode);
+            }
+            else
+            {
+                last_server_readings[game_mode] = new Dictionary<string, string>(readings, StringComparer.OrdinalIgnoreCase);
+            }
+
+            await SaveSettingsAsync();
+        }
+
+        public async Task SetAutoRefreshMinutesAsync(int minutes)
+        {
+            auto_refresh_minutes = minutes;
+
+            await SaveSettingsAsync();
+        }
+
+        public async Task SetMinimizeToTrayAsync(bool enabled)
+        {
+            minimize_to_tray = enabled;
 
             await SaveSettingsAsync();
         }

@@ -72,7 +72,7 @@ public partial class FooterButtons : UserControl
     {
         await ServiceLocator
             .GetRequiredService<IProcessService>()
-            .OpenUrl("https://github.com/FN-FAL113/server-picker-x");
+            .OpenUrl("https://github.com/cankhut/server-picker-x");
     }
 
     private void SettingsBtn_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

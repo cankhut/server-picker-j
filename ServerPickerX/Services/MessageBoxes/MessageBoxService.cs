@@ -6,6 +6,7 @@ using ServerPickerX.Services.Loggers;
 using ServerPickerX.Services.Processes;
 using ServerPickerX.Views;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ServerPickerX.Services.MessageBoxes
@@ -78,6 +79,36 @@ namespace ServerPickerX.Services.MessageBoxes
             {
                 await _logger.LogErrorAsync("Failed to show message box confirmation", ex.Message);
                 return false;
+            }
+        }
+
+        public async Task<string> ShowMessageBoxChoiceAsync(string title, string text, string[] buttonNames, Icon icon = Icon.Info)
+        {
+            try
+            {
+                var customMbsParams = new MessageBoxCustomParams
+                {
+                    ContentTitle = title,
+                    ContentMessage = text,
+                    ButtonDefinitions = buttonNames
+                        .Select(buttonName => new MsBox.Avalonia.Models.ButtonDefinition { Name = buttonName })
+                        .ToList(),
+                    WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
+                    ShowInCenter = true,
+                    CanResize = false,
+                    Icon = title == "Error" ? Icon.Error : icon,
+                    Topmost = true,
+                };
+
+                var box = MessageBoxManager.GetMessageBoxCustom(customMbsParams);
+
+                return await box.ShowWindowDialogAsync(MainWindow.Instance!) ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogErrorAsync("Failed to show message box choice", ex.Message);
+
+                return string.Empty;
             }
         }
 

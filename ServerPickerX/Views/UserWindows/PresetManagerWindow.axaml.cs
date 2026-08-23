@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -26,20 +27,98 @@ namespace ServerPickerX.Views
         private string? _serverSortColumn;
         private ListSortDirection _serverSortDirection = ListSortDirection.Ascending;
 
+        private readonly IMessageBoxService _messageBoxService;
+        private readonly ILocalizationService _localizationService;
+
         public PresetManagerWindow()
         {
             InitializeComponent();
+
+            _messageBoxService = ServiceLocator.GetRequiredService<IMessageBoxService>();
+            _localizationService = ServiceLocator.GetRequiredService<ILocalizationService>();
         }
 
         public PresetManagerWindow(MainWindowViewModel mainVm)
         {
             InitializeComponent();
+
+            _messageBoxService = ServiceLocator.GetRequiredService<IMessageBoxService>();
+            _localizationService = ServiceLocator.GetRequiredService<ILocalizationService>();
+
             DataContext = new PresetManagerWindowViewModel(
                 mainVm,
                 ServiceLocator.GetRequiredService<JsonSetting>(),
                 ServiceLocator.GetRequiredService<IMessageBoxService>(),
                 ServiceLocator.GetRequiredService<ILocalizationService>()
                 );
+        }
+
+        private async void ShareBtn_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not PresetManagerWindowViewModel vm)
+            {
+                return;
+            }
+
+            string? code = vm.ExportSelectedPresetCode();
+
+            if (string.IsNullOrEmpty(code))
+            {
+                return;
+            }
+
+            IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+
+            if (clipboard == null)
+            {
+                return;
+            }
+
+            await clipboard.SetTextAsync(code);
+
+            await _messageBoxService.ShowMessageBoxAsync(
+                _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
+                _localizationService.GetLocaleValue("PresetCodeCopiedDialogue")
+                );
+        }
+
+        // The code arrives by clipboard rather than a text field, which is how it
+        // reaches the user in the first place
+        private async void ImportBtn_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not PresetManagerWindowViewModel vm)
+            {
+                return;
+            }
+
+            IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+
+            if (clipboard == null)
+            {
+                return;
+            }
+
+            string? code = await clipboard.TryGetTextAsync();
+
+            PresetImportResult result = await vm.ImportPresetFromCodeAsync(code);
+
+            string message = result switch
+            {
+                PresetImportResult.Imported => _localizationService.GetLocaleValue("PresetImportedDialogue"),
+                PresetImportResult.WrongGameMode => _localizationService.GetLocaleValue("PresetImportWrongGameDialogue"),
+                _ => _localizationService.GetLocaleValue("PresetImportInvalidDialogue"),
+            };
+
+            await _messageBoxService.ShowMessageBoxAsync(
+                _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
+                message
+                );
+
+            if (result == PresetImportResult.Imported)
+            {
+                ReapplyPresetSortIfNeeded();
+                ReapplyServerSortIfNeeded();
+            }
         }
 
         private async void AddBtn_Click(object? sender, RoutedEventArgs e)

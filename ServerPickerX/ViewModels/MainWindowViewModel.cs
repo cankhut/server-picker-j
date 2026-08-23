@@ -193,10 +193,14 @@ namespace ServerPickerX.ViewModels
 
             ApplyStoredBlockedState();
 
+            await ReconcileBlockedStateAsync();
+
+            ApplyStoredReadings();
+
             OnPropertyChanged(nameof(FilteredServerModels));
             OnPropertyChanged(nameof(BlockedServerCount));
 
-            PingServers(serverModels);
+            _ = PingServersAsync(serverModels);
         }
 
         public PresetModel? GetCurrentGamePreset(string presetName)
@@ -293,7 +297,9 @@ namespace ServerPickerX.ViewModels
         }
 
         [RelayCommand]
-        public void PingServers(ICollection<ServerModel> serverModels)
+        public void PingServers(ICollection<ServerModel> serverModels) => _ = PingServersAsync(serverModels);
+
+        public async Task PingServersAsync(ICollection<ServerModel> serverModels)
         {
             if (serverModels.Count == 0)
             {
@@ -302,15 +308,31 @@ namespace ServerPickerX.ViewModels
 
             try
             {
-                foreach (ServerModel serverModel in serverModels)
+                // A blocked server drops every probe, so probing it costs four
+                // timeouts and destroys the reading taken before it was blocked
+                List<Task> probes = serverModels
+                    .Where(serverModel => !serverModel.IsBlocked)
+                    .Select(serverModel => serverModel.PingServerAsync())
+                    .ToList();
+
+                if (probes.Count == 0)
                 {
-                    serverModel.PingServer();
+                    return;
                 }
+
+                await Task.WhenAll(probes);
             }
             catch (InvalidOperationException)
             {
                 // when user suddenly tries to cluster or uncluster the servers while server models are being iterated
             }
+            catch (Exception ex)
+            {
+                // One unreachable relay must not take the whole sweep down with it
+                await _loggerService.LogWarningAsync("A ping sweep did not finish cleanly: " + ex.Message);
+            }
+
+            await PersistServerReadingsAsync();
         }
 
         public void PingSelectedServer()
@@ -334,6 +356,37 @@ namespace ServerPickerX.ViewModels
             ObservableCollection<ServerModel> serverModels = new() { serverModel };
 
             return await PerformOperationAsync(!serverModel.IsBlocked, serverModels);
+        }
+
+        // Blocks every server whose ping is at least as high as the one right clicked,
+        // so a threshold can be set from a card instead of a number field in the toolbar
+        public async Task<bool> BlockSlowerThanAsync(ServerModel? referenceServerModel)
+        {
+            if (referenceServerModel == null || !IsOperationAllowed)
+            {
+                return false;
+            }
+
+            int threshold = ParseMetric(referenceServerModel.Ping, UnknownPing);
+
+            if (threshold == UnknownPing)
+            {
+                return false;
+            }
+
+            ObservableCollection<ServerModel> serverModels = new(
+                ServerModels.Where(serverModel =>
+                    !serverModel.IsBlocked
+                    && ParseMetric(serverModel.Ping, UnknownPing) >= threshold
+                    && ParseMetric(serverModel.Ping, UnknownPing) != UnknownPing)
+                );
+
+            if (serverModels.Count == 0)
+            {
+                return false;
+            }
+
+            return await PerformOperationAsync(true, serverModels);
         }
 
         [RelayCommand]
@@ -582,6 +635,104 @@ namespace ServerPickerX.ViewModels
             {
                 serverModel.IsBlocked = blockedServerKeys.Contains(GetServerKey(serverModel));
             }
+        }
+
+        // Firewall rules survive the app, so on launch the rules are the truth and the
+        // saved state is corrected to match. Without this a rule cleared behind the
+        // app's back leaves a card showing blocked while traffic flows normally
+        private async Task ReconcileBlockedStateAsync()
+        {
+            List<ServerModel>? blockedServerModels = await _systemFirewallService
+                .GetBlockedServersAsync(new ObservableCollection<ServerModel>(ServerModels));
+
+            if (blockedServerModels == null)
+            {
+                return;
+            }
+
+            HashSet<ServerModel> blockedSet = new(blockedServerModels);
+
+            bool driftFound = false;
+
+            foreach (ServerModel serverModel in ServerModels)
+            {
+                bool isActuallyBlocked = blockedSet.Contains(serverModel);
+
+                if (serverModel.IsBlocked != isActuallyBlocked)
+                {
+                    serverModel.IsBlocked = isActuallyBlocked;
+
+                    driftFound = true;
+                }
+            }
+
+            if (!driftFound)
+            {
+                return;
+            }
+
+            await _loggerService.LogInfoAsync("Saved blocked servers did not match the firewall, corrected from the firewall rules");
+
+            await PersistBlockedServerKeysAsync();
+        }
+
+        // Called once the firewall rules this app created have been removed, so the
+        // cards stop claiming servers are blocked when nothing is blocking them
+        public async Task ClearBlockedStateAsync()
+        {
+            foreach (ServerModel serverModel in ServerModels)
+            {
+                serverModel.IsBlocked = false;
+            }
+
+            await PersistBlockedServerKeysAsync();
+
+            OnPropertyChanged(nameof(FilteredServerModels));
+            OnPropertyChanged(nameof(BlockedServerCount));
+        }
+
+        private void ApplyStoredReadings()
+        {
+            Dictionary<string, string> storedReadings = _jsonSetting.GetServerReadingsByGameMode();
+
+            if (storedReadings.Count == 0)
+            {
+                return;
+            }
+
+            foreach (ServerModel serverModel in ServerModels)
+            {
+                if (!storedReadings.TryGetValue(GetServerKey(serverModel), out string? reading))
+                {
+                    continue;
+                }
+
+                string[] parts = (reading ?? string.Empty).Split('|');
+
+                if (parts.Length != 2)
+                {
+                    continue;
+                }
+
+                serverModel.ApplyStoredReading(parts[0], parts[1]);
+            }
+        }
+
+        private async Task PersistServerReadingsAsync()
+        {
+            Dictionary<string, string> readings = new(StringComparer.OrdinalIgnoreCase);
+
+            foreach (ServerModel serverModel in ServerModels)
+            {
+                if (string.IsNullOrWhiteSpace(serverModel.Ping) || serverModel.Ping == ServerModel.PendingReading)
+                {
+                    continue;
+                }
+
+                readings[GetServerKey(serverModel)] = $"{serverModel.Ping}|{serverModel.PacketLoss}";
+            }
+
+            await _jsonSetting.SetServerReadingsByGameModeAsync(readings);
         }
 
         private async Task PersistBlockedServerKeysAsync()

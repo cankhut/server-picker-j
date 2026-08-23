@@ -219,6 +219,8 @@
                                         <ContextMenu>
                                             <MenuItem Header="{DynamicResource PingServerMenuItem}"
                                                       Click="PingServerMenuItem_Click" />
+                                            <MenuItem Header="{DynamicResource BlockSlowerMenuItem}"
+                                                      Click="BlockSlowerMenuItem_Click" />
                                         </ContextMenu>
                                     </Border.ContextMenu>
 

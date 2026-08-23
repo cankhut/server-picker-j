@@ -5,6 +5,7 @@ using ServerPickerX.Services.Loggers;
 using ServerPickerX.Services.MessageBoxes;
 using ServerPickerX.Services.Processes;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -81,36 +82,62 @@ namespace ServerPickerX.Services.SystemFirewalls
             }
         }
 
-        public async Task ResetFirewallAsync()
+        // Removes every rule this app created, by name prefix, and leaves the rest of
+        // the machine's firewall configuration alone. The previous implementation ran
+        // "netsh advfirewall reset", which restores Windows defaults and deletes every
+        // rule on the system, including ones other applications rely on
+        public async Task ResetFirewallAsync(ObservableCollection<ServerModel> serverModels)
         {
-            var result = await _messageBoxService.ShowMessageBoxConfirmationAsync(
+            bool confirmed = await _messageBoxService.ShowMessageBoxConfirmationAsync(
                     _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
                     _localizationService.GetLocaleValue("FirewallResetConfirmDialogue"),
                     MsBox.Avalonia.Enums.Icon.Warning
                 );
 
-            if (!result) return;
-
-            using Process process = _processService.CreateProcess("cmd.exe");
+            if (!confirmed) return;
 
             try
             {
-                process.StartInfo.Arguments = $"/c {Path.Combine(Environment.SystemDirectory, "netsh.exe")} advfirewall reset";
+                INetFwPolicy2 firewallPolicy = GetFirewallPolicyApi();
+                INetFwRules firewallRules = firewallPolicy.Rules;
 
-                process.Start();
-                process.WaitForExit();
+                // Names are collected first, removing while enumerating invalidates the iterator
+                List<string> ownedRuleNames = [];
 
-                string stdOut = process.StandardOutput.ReadToEnd().Trim();
-                string stdErr = process.StandardError.ReadToEnd().Trim();
-
-                if (process.ExitCode > 0)
+                foreach (INetFwRule firewallRule in firewallRules)
                 {
-                    await _loggerService.LogWarningAsync("StdOut: " + stdOut + " StdErr: " + stdErr);
+                    string? ruleName = null;
+
+                    try
+                    {
+                        ruleName = firewallRule.Name;
+                    }
+                    catch (Exception)
+                    {
+                        // A malformed rule elsewhere in the table must not abort the sweep
+                    }
+
+                    if (ruleName != null
+                        && ruleName.StartsWith(_firewallRulePrefix, StringComparison.OrdinalIgnoreCase)
+                        && !ownedRuleNames.Contains(ruleName))
+                    {
+                        ownedRuleNames.Add(ruleName);
+                    }
                 }
+
+                foreach (string ruleName in ownedRuleNames)
+                {
+                    RemoveFirewallRuleByName(firewallRules, ruleName);
+                }
+
+                await _loggerService.LogInfoAsync($"Removed {ownedRuleNames.Count} firewall rules created by this app");
 
                 await _messageBoxService.ShowMessageBoxAsync(
                     _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
-                    _localizationService.GetLocaleValue("FirewallResetSuccessDialogue"),
+                    string.Format(
+                        _localizationService.GetLocaleValue("FirewallResetSuccessDialogue"),
+                        ownedRuleNames.Count
+                        ),
                     MsBox.Avalonia.Enums.Icon.Success
                     );
             }
@@ -118,6 +145,33 @@ namespace ServerPickerX.Services.SystemFirewalls
             {
                 await _loggerService.LogErrorAsync(ex.Message);
                 throw;
+            }
+        }
+
+        public async Task<List<ServerModel>?> GetBlockedServersAsync(ObservableCollection<ServerModel> serverModels)
+        {
+            try
+            {
+                INetFwPolicy2 firewallPolicy = GetFirewallPolicyApi();
+                INetFwRules firewallRules = firewallPolicy.Rules;
+
+                List<ServerModel> blockedServerModels = [];
+
+                foreach (var serverModel in serverModels)
+                {
+                    if (TryGetFirewallRule(firewallRules, GetFirewallRuleName(serverModel)) != null)
+                    {
+                        blockedServerModels.Add(serverModel);
+                    }
+                }
+
+                return blockedServerModels;
+            }
+            catch (Exception ex)
+            {
+                await _loggerService.LogWarningAsync("Could not read firewall rules: " + ex.Message);
+
+                return null;
             }
         }
 

@@ -1,11 +1,14 @@
 using CommunityToolkit.Mvvm.Input;
+using ServerPickerX.Models;
 using ServerPickerX.Services.DependencyInjection;
 using ServerPickerX.Services.Loggers;
 using ServerPickerX.Services.MessageBoxes;
 using ServerPickerX.Services.Servers;
 using ServerPickerX.Services.SystemFirewalls;
 using ServerPickerX.Settings;
+using ServerPickerX.Views;
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace ServerPickerX.ViewModels
@@ -58,7 +61,19 @@ namespace ServerPickerX.ViewModels
         {
             try
             {
-                await _systemFirewallService.ResetFirewallAsync();
+                // Windows finds its own rules by name, Linux needs the servers to
+                // delete precisely rather than flushing the table
+                ObservableCollection<ServerModel> serverModels =
+                    MainWindow.Instance?.DataContext is MainWindowViewModel mainViewModel
+                        ? new ObservableCollection<ServerModel>(mainViewModel.ServerModels)
+                        : [];
+
+                await _systemFirewallService.ResetFirewallAsync(serverModels);
+
+                if (MainWindow.Instance?.DataContext is MainWindowViewModel viewModelToRefresh)
+                {
+                    await viewModelToRefresh.ClearBlockedStateAsync();
+                }
             }
             catch (Exception ex)
             {

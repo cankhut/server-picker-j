@@ -4,6 +4,7 @@ using ServerPickerX.Services.Loggers;
 using ServerPickerX.Services.MessageBoxes;
 using ServerPickerX.Services.Processes;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -82,47 +83,47 @@ namespace ServerPickerX.Services.SystemFirewalls
             }
         }
 
-        public async Task ResetFirewallAsync()
+        // Deletes only the DROP rules this app added, one per server. The previous
+        // implementation ran "iptables -F", which flushes every rule in the table and
+        // would take unrelated rules, including ones protecting remote access, with it
+        public async Task ResetFirewallAsync(ObservableCollection<ServerModel> serverModels)
         {
-            var result = await _messageBoxService.ShowMessageBoxConfirmationAsync(
+            bool confirmed = await _messageBoxService.ShowMessageBoxConfirmationAsync(
                 _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
                 _localizationService.GetLocaleValue("FirewallResetConfirmDialogue"),
                 MsBox.Avalonia.Enums.Icon.Warning
                 );
 
-            if (!result)
+            if (!confirmed)
             {
                 return;
             }
 
-            using Process process = _processService.CreateProcess("sudo");
-
             try
             {
-                process.StartInfo.Arguments = $"iptables -F";
+                await UnblockServersAsync(serverModels);
 
-                process.Start();
-                process.WaitForExit();
-
-                string stdOut = process.StandardOutput.ReadToEnd().Trim();
-                string stdErr = process.StandardError.ReadToEnd().Trim();
-
-                if (process.ExitCode > 0)
-                {
-                    await _loggerService.LogWarningAsync("StdOut: " + stdOut + " StdErr: " + stdErr);
-                }
+                await _loggerService.LogInfoAsync($"Removed firewall rules for {serverModels.Count} servers");
 
                 await _messageBoxService.ShowMessageBoxAsync(
                     _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
-                    _localizationService.GetLocaleValue("FirewallResetSuccessDialogue"),
+                    string.Format(
+                        _localizationService.GetLocaleValue("FirewallResetSuccessDialogue"),
+                        serverModels.Count
+                        ),
                     MsBox.Avalonia.Enums.Icon.Success
                     );
             }
             catch (Exception ex)
             {
-                // Perform debugging here if necessary (log error or through debugger breakpoints)
+                await _loggerService.LogErrorAsync(ex.Message);
                 throw;
             }
         }
+
+        // iptables rules carry no marker tying them back to a server, so the saved
+        // state stays authoritative here rather than being reconciled against nothing
+        public Task<List<ServerModel>?> GetBlockedServersAsync(ObservableCollection<ServerModel> serverModels)
+            => Task.FromResult<List<ServerModel>?>(null);
     }
 }

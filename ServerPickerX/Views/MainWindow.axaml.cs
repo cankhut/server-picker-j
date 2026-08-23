@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
+using Avalonia.Threading;
 using ServerPickerX.Models;
 using ServerPickerX.Services.DependencyInjection;
 using ServerPickerX.Services.Localizations;
@@ -38,6 +40,10 @@ namespace ServerPickerX.Views
 
         private bool _suppressPresetSelectionChanged;
         private PresetModel? _previousPreset;
+        private DispatcherTimer? _autoRefreshTimer;
+        private TrayIcon? _trayIcon;
+        private bool _isExiting;
+        private bool _blockedExitPromptAnswered;
 
         private readonly ILoggerService _loggerService;
         private readonly JsonSetting _jsonSetting;
@@ -140,6 +146,21 @@ namespace ServerPickerX.Views
             {
                 serverModel.PingServer();
             }
+        }
+
+        private async void BlockSlowerMenuItem_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not MainWindowViewModel vm)
+            {
+                return;
+            }
+
+            if (sender is not MenuItem { DataContext: ServerModel serverModel })
+            {
+                return;
+            }
+
+            await vm.BlockSlowerThanAsync(serverModel);
         }
 
         private void SortBtn_Click(object? sender, RoutedEventArgs e)
@@ -270,7 +291,191 @@ namespace ServerPickerX.Views
             RefreshClusterButtonContent();
             RefreshSortChips();
 
+            ConfigureAutoRefresh();
+            ConfigureTrayIcon();
+
             await _versionService.CheckVersionAsync();
+        }
+
+        // Re-probes on a timer when the user has opted in. Blocked servers are skipped
+        // by the sweep itself, so an idle tick costs nothing when everything is blocked
+        public void ConfigureAutoRefresh()
+        {
+            if (_autoRefreshTimer != null)
+            {
+                _autoRefreshTimer.Stop();
+                _autoRefreshTimer.Tick -= AutoRefreshTimer_Tick;
+                _autoRefreshTimer = null;
+            }
+
+            int minutes = _jsonSetting.auto_refresh_minutes;
+
+            if (minutes <= 0)
+            {
+                return;
+            }
+
+            _autoRefreshTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMinutes(minutes)
+            };
+
+            _autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
+            _autoRefreshTimer.Start();
+        }
+
+        private void AutoRefreshTimer_Tick(object? sender, EventArgs e)
+        {
+            if (DataContext is not MainWindowViewModel vm)
+            {
+                return;
+            }
+
+            // Skip the tick outright while hidden or mid firewall operation rather
+            // than queueing work the user will never see
+            if (!IsVisible || WindowState == WindowState.Minimized || !vm.IsOperationAllowed)
+            {
+                return;
+            }
+
+            _ = vm.PingServersAsync(vm.ServerModels);
+        }
+
+        public void ConfigureTrayIcon()
+        {
+            if (!_jsonSetting.minimize_to_tray)
+            {
+                DisposeTrayIcon();
+
+                return;
+            }
+
+            if (_trayIcon != null)
+            {
+                return;
+            }
+
+            try
+            {
+                NativeMenuItem showItem = new(_localizationService.GetLocaleValue("TrayShow"));
+                showItem.Click += (_, _) => RestoreFromTray();
+
+                NativeMenuItem quitItem = new(_localizationService.GetLocaleValue("TrayQuit"));
+                quitItem.Click += (_, _) => ExitApplication();
+
+                NativeMenu trayMenu = new();
+                trayMenu.Add(showItem);
+                trayMenu.Add(quitItem);
+
+                _trayIcon = new TrayIcon
+                {
+                    Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://ServerPickerX/Assets/favicon.ico"))),
+                    ToolTipText = "Server Picker X",
+                    IsVisible = true,
+                    Menu = trayMenu
+                };
+
+                _trayIcon.Clicked += (_, _) => RestoreFromTray();
+            }
+            catch (Exception)
+            {
+                // A desktop without a system tray just keeps the window on close
+                _trayIcon = null;
+            }
+        }
+
+        private void DisposeTrayIcon()
+        {
+            if (_trayIcon == null)
+            {
+                return;
+            }
+
+            _trayIcon.IsVisible = false;
+            _trayIcon.Dispose();
+            _trayIcon = null;
+        }
+
+        private void RestoreFromTray()
+        {
+            Show();
+
+            WindowState = WindowState.Normal;
+
+            Activate();
+        }
+
+        private void ExitApplication()
+        {
+            _isExiting = true;
+
+            DisposeTrayIcon();
+
+            Close();
+        }
+
+        protected override void OnClosing(WindowClosingEventArgs e)
+        {
+            if (!_isExiting && _jsonSetting.minimize_to_tray && _trayIcon != null)
+            {
+                e.Cancel = true;
+
+                Hide();
+
+                return;
+            }
+
+            // Firewall rules outlive the app, so leaving servers blocked is a decision
+            // the user should make knowingly rather than discover weeks later
+            if (!_blockedExitPromptAnswered
+                && DataContext is MainWindowViewModel viewModel
+                && viewModel.BlockedServerCount > 0)
+            {
+                e.Cancel = true;
+
+                _ = ConfirmExitWithBlockedServersAsync(viewModel);
+
+                return;
+            }
+
+            _autoRefreshTimer?.Stop();
+
+            DisposeTrayIcon();
+
+            base.OnClosing(e);
+        }
+
+        private async Task ConfirmExitWithBlockedServersAsync(MainWindowViewModel viewModel)
+        {
+            string keepBlocked = _localizationService.GetLocaleValue("BlockedOnExitKeep");
+            string unblockAll = _localizationService.GetLocaleValue("BlockedOnExitUnblock");
+            string cancel = _localizationService.GetLocaleValue("BlockedOnExitCancel");
+
+            string choice = await _messageBoxService.ShowMessageBoxChoiceAsync(
+                _localizationService.GetLocaleValue("MessageBoxInfoTitle"),
+                string.Format(
+                    _localizationService.GetLocaleValue("BlockedOnExitDialogue"),
+                    viewModel.BlockedServerCount
+                    ),
+                [unblockAll, keepBlocked, cancel],
+                MsBox.Avalonia.Enums.Icon.Warning
+                );
+
+            // Dismissing the dialog leaves the app open rather than guessing
+            if (choice != keepBlocked && choice != unblockAll)
+            {
+                return;
+            }
+
+            if (choice == unblockAll)
+            {
+                await viewModel.UnblockAllAsync();
+            }
+
+            _blockedExitPromptAnswered = true;
+            _isExiting = true;
+
+            Close();
         }
 
         private async Task SetLanguage()

@@ -6,6 +6,7 @@ using ServerPickerX.Models;
 using ServerPickerX.Services.DependencyInjection;
 using ServerPickerX.Services.Localizations;
 using ServerPickerX.Services.MessageBoxes;
+using ServerPickerX.Services.Presets;
 using ServerPickerX.Settings;
 using System;
 using System.Collections.Generic;
@@ -460,6 +461,61 @@ namespace ServerPickerX.ViewModels
             {
                 _mainVm.LoadPresetPickerItems();
                 _mainVm.SelectPresetByName(renamedPresetName);
+            }
+        }
+
+        // Builds the shareable code for the highlighted preset
+        public string? ExportSelectedPresetCode()
+        {
+            return SelectedPresetItem == null
+                ? null
+                : PresetShareCode.Encode(SelectedPresetItem);
+        }
+
+        // Adds a preset decoded from a pasted code. Existing presets are never
+        // overwritten, a colliding name gets a numbered suffix instead
+        public async Task<PresetImportResult> ImportPresetFromCodeAsync(string? code)
+        {
+            if (!PresetShareCode.TryDecode(code, out PresetModel importedPreset))
+            {
+                return PresetImportResult.Invalid;
+            }
+
+            string currentGameMode = _mainVm.GetCurrentGameMode();
+
+            if (!importedPreset.GameMode.Equals(currentGameMode, StringComparison.OrdinalIgnoreCase))
+            {
+                return PresetImportResult.WrongGameMode;
+            }
+
+            importedPreset.Name = GetAvailablePresetName(importedPreset.Name);
+
+            await _jsonSetting.AddOrUpdatePresetAsync(ClonePreset(importedPreset));
+
+            ReloadPresets(importedPreset.Name);
+
+            return PresetImportResult.Imported;
+        }
+
+        private string GetAvailablePresetName(string requestedName)
+        {
+            HashSet<string> existingPresetNames = GetCurrentGamePresets()
+                .Select(preset => preset.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (!existingPresetNames.Contains(requestedName))
+            {
+                return requestedName;
+            }
+
+            for (int suffix = 2; ; suffix++)
+            {
+                string candidateName = $"{requestedName} ({suffix})";
+
+                if (!existingPresetNames.Contains(candidateName))
+                {
+                    return candidateName;
+                }
             }
         }
 

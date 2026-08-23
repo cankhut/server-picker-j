@@ -6,11 +6,12 @@
              mc:Ignorable="d"
              x:CompileBindings="False"
              x:Class="ServerPickerX.FooterButtons">
-    <StackPanel VerticalAlignment="Center"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal"
-                Margin="0,0,8,0"
-                Spacing="2">
+    <StackPanel
+        VerticalAlignment="Center"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal"
+        Margin="0,0,10,0"
+        Spacing="2">
         <Button x:Name="ThemeBtn"
                 Classes="icon-btn"
                 i:Attached.Icon="{Binding ThemeIcon, RelativeSource={RelativeSource AncestorType=UserControl}}"
