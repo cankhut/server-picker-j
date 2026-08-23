@@ -52,7 +52,7 @@ A lightweight server picker for Counter Strike and Deadlock with cross-platform 
 
 **Windows:** extract anywhere, then run `ServerPickerX.exe` **as administrator**.
 
-**Linux** — extract, then:
+**Linux:** extract, then:
 
 ```
 ./RunServerPickerX.sh
