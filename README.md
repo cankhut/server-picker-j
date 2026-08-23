@@ -1,94 +1,138 @@
-# Server Picker X
+# Server Picker J
+
 <div align="center">
 
-  <a href="https://api.github.com/repositories/1141835010/releases"><img src="https://img.shields.io/github/downloads/FN-FAL113/server-picker-x/total.svg"/></a>
-  <img src="https://img.shields.io/github/license/FN-FAL113/server-picker-x"/>
-  <img src="https://img.shields.io/github/v/release/FN-FAL113/server-picker-x"/>
-  <img src="https://img.shields.io/github/stars/FN-FAL113/server-picker-x"/>
+  <img src="https://img.shields.io/github/v/release/cankhut/server-picker-j"/>
+  <img src="https://img.shields.io/github/downloads/cankhut/server-picker-j/total.svg"/>
+  <img src="https://img.shields.io/github/license/cankhut/server-picker-j"/>
 
 </div>
 
-Lightweight server picker for CS2 and Deadlock with cross-platform support for **Windows** and **Linux**. A rewrite of my CS2 Server Picker into a modern MVVM pattern and service-based application. Designed to control connections by blocking or unblocking servers according to their location.
+<table>
+<tr>
+<td valign="middle">
 
-## ⬇️ Download
-### [Releases](https://github.com/FN-FAL113/server-picker-x/releases)
+**This is a fork of [server-picker-x](https://github.com/FN-FAL113/server-picker-x) by FN-FAL113.**
 
-## 📷 Screenshot
-![ServerPickerX](https://github.com/user-attachments/assets/21a3a513-9dce-461b-a174-becddcb57f4a)
-<details>
-  <summary>Windows Short Demo</summary>
-  
-  ![Windows Short Demo Video](https://github.com/FN-FAL113/server-picker-x/blob/chore/readme-assets/readme_assets/ServerPickerX-Windows.gif)
-</details>
-<details>
-  <summary>Linux Arch Short Demo</summary>
-  
-  ![Linux Arch Short Demo Video](https://github.com/FN-FAL113/server-picker-x/blob/chore/readme-assets/readme_assets/ServerPickerX-Linux-Arch.gif)
-</details>
+The app and nearly all of its code are his work. This version just 
+reworks the user interface and adds a few quality of life features on top. 
+I don't take donations for it, if it's useful to you in any way, please 
+consider supporting the original author instead.
 
-## ❔ FAQ
-**1. How it works, will I get banned?!**
- - The app does not modify any game or system files, I can assure you are safe from being banned when using the app as long as you **do not download from untrusted sources**. It will add necessary firewall policies to block game server relay ip addresses from being accessed by your network thus skipping them in-game when finding a match.
-
-**2. Not being routed to lowest ping server or not working on your location?**
-  - Due to the fact that we can only access and block **_IP relay addresses_** from valve's network points around the world rather than the game's actual server IP addresses directly, which are **_not exposed_** publicly, either your connection got relayed to the nearest available server due to **_how Steam Datagram relay works_** or **_your location might be a factor_**. 
-- Re-routing can also happen anytime, even mid-game. One of the best ways to test it out is to block low-ping servers and leave out high-ping servers that are far from your current region. If your ping is high in-game, then you are being routed properly, and the blocked IP relays are not able to re-route you to a nearby server. I was able to test this out properly way back.
-- Some solutions that might help out but are not guaranteed: turning off any vpn, uninstalling third-party antivirus.
-- ISP-related issues, such as bad routing or high ping, are out of scope and control since the app only adds firewall entries. Please contact your ISP instead.
-
-**3. Why it requires admin/sudo permission on execution?<br>**
-  - This is due to how Windows or Linux requires elevated execution when adding the necessary firewall policies. If the app is running in normal mode, it will not be able to do its operations and will throw errors.
-
-**4. Windows smartscreen detected unrecognized app/publisher<br>**
-  - The app requires a registered publisher which costs a lot of money. Rest assured the app is safe and you can compile it yourself. Again, do not download from untrusted sources.
-
-![image](https://github.com/FN-FAL113/csgo-server-picker/assets/88238718/fe0af8a8-4195-457e-bbbf-3a772e7f646c)
-
-**5. I'm receiving frequent timeouts when a match is being confirmed<br>**
-  - You may have blocked too many servers, for optimal searching and relaying block only the necessary server relays.
-
-## 🐛 Troubleshooting
-| Problem | Cause | Fix |
-|---------|---------------|-----|
-| Firewall rules not applied or app won't open | App not run as admin or not in sudo env | - For windows: Run the app in administrator mode <br/> - For Linux: Add execute permission for the bash script `chmod +x RunServerPickerX.sh` and execute the app `./RunServerPickerX.sh`,  |
-| No servers appear | Internet blocked / API unreachable | Check your network and try again. |
-| Ping shows ❌ for all | Server IPs are blocked or unreachable | Ensure you’re connected to the internet and that no other firewall is interfering. |
-
-If you encounter a bug, open an issue on GitHub and include:
-* Operating System
-* Steps to reproduce
-* Any info/error logs (the app writes them to `server_picker_x_log.txt`)
-> ⚠️ The first time you run the app it will create a settings.json file in the current directory. Do not edit this file manually; use the Settings UI instead.
-
-## 🛠️ Building from Source
-#### Clone the repo
-```
-git clone https://github.com/FN-FAL113/server-picker-x.git
-cd server-picker-x
-```
-#### Restore NuGet packages
-`dotnet restore ServerPickerX.slnx`
-#### Build (debug)
-`dotnet build ServerPickerX.slnx -c Debug`
-
-Executable output: in `ServerPickerX/bin/Debug/net10.0/<runtime>/publish/`
-#### Build (release)
-`dotnet publish ServerPickerX.slnx -c Release -r win-x64`  # or linux-x64.
-
-Executable output: `ServerPickerX/bin/Release/net10.0/<runtime>/publish/`
-#### Run in debug mode
-`dotnet run --project ServerPickerX/ServerPickerX.csproj`
-
-## 🤝 Contributing
-Feel free to fork the repo, create a feature branch, and submit a pull request.  
-All contributions are welcome – just keep in mind the GPL v3 license.
-
-## 🔽 Disclaimer
-- This project or its author are not affiliated, associated, authorized, endorsed by valve, its affiliates or subsidiaries. Images, names and other form of trademark are registered to their respective owners.
-- You are free to compile the project on Visual Studio, the zip/tar file provided here is a clean compilation of the binaries.
-  
-## 💖 Support the Project/Dev
-- I develop stuff for free with dedication and hard work. Sharing this project with fellow gamers or giving it a star is a huge sign of appreciation!</br>
-<a href="https://www.paypal.com/paypalme/fnfal113" target=_blank>
-  <img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" alt="Donate via Paypal" width="40%" />
+</td>
+<td valign="middle" width="170" align="right">
+<a href="https://www.paypal.com/paypalme/fnfal113">
+  <img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" alt="Donate to FN-FAL113 via PayPal" width="150">
 </a>
+</td>
+</tr>
+</table>
+
+A lightweight server picker for Counter Strike and Deadlock with cross-platform support for **Windows** and **Linux**. Blocks game servers by location so the game matches you where you want.
+
+## Download
+
+**[Latest release](https://github.com/cankhut/server-picker-j/releases)**
+
+## Screenshot
+
+![Server Picker J](readme_assets/server-picker-j.png)
+
+## What's different from the original
+
+- Servers are displayed as cards instead of a table, click on it to block or allow it
+- Light and dark themes, following your system setting by default
+- Ping is the average of four probes, so a server that spikes doesn't read the same as a steady one
+- Blocked servers keep their last ping, so they still sort correctly
+- Right click a card to block every server at least as slow as it
+- Presets can be shared as a short code and imported from your clipboard
+- Optional auto refresh and optional close to system tray under settings tab
+
+## Install
+
+**Windows:** extract anywhere, then run `ServerPickerX.exe` **as administrator**.
+
+**Linux** — extract, then:
+
+```
+./RunServerPickerX.sh
+```
+
+The script adds the execute permission and launches the app with sudo on the
+current shell. Don't run the binary directly with `sudo`.
+
+## Blocking persists after you close the app
+
+Blocking a server creates a Windows Firewall rule (or an iptables rule on Linux). 
+Those live in your operating system, not in the app itself, so they stay in place even 
+after you close it, after a reboot and indefinitely until you remove them.
+
+The app warns you on exit if servers are still blocked and offers to unblock
+them. To clear everything at once, use **Remove App Rules** in Settings, it
+removes only the rules this app created and leaves the rest of your firewall
+alone.
+
+If you delete the app while servers are still blocked, those rules stay behind.
+Unblock first, or reinstall and use Remove App Rules.
+
+## FAQ
+
+**Will I get banned?**
+The app does not modify any game or system files, I can assure you are safe from being banned when using the app as long as you do not download from untrusted sources. It will add necessary firewall policies to block game server relay ip addresses from being accessed by your network thus skipping them in-game when finding a match.
+
+**Why does it need administrator or sudo?**
+Creating firewall rules requires elevation on both Windows and Linux. Run it
+normally and every operation fails.
+
+**Windows SmartScreen says unrecognised publisher.**
+The app isn't code signed, a certificate costs real money. You can build it
+yourself from source if you'd rather not trust the binary.
+
+**I'm receiving frequent timeouts when a match is being confirmed**
+You may have blocked too many servers, for optimal searching and relaying block only the necessary server relays.
+
+**Does the firewall reset remove every rule in my machine?**
+No, it only removes this app's rules, this was an issue in an earlier build of 
+the app but it should be completely fixed now.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| Rules not applied, or the app won't start | Run as administrator on Windows, or use `./RunServerPickerX.sh` on Linux |
+| No servers appear | Check your connection please, the server list comes from Steam's API |
+| Every server shows no ping | Something else is blocking ICMP, or you're offline |
+
+The app writes `server_picker_x_log.txt` and `settings.json` next to the
+executable. Don't edit `settings.json` by hand, just use the Settings window please.
+
+Found a bug? [Open an issue](https://github.com/cankhut/server-picker-j/issues)
+with your OS, the steps to reproduce it, and the log file.
+
+## Building from source
+
+```
+git clone https://github.com/cankhut/server-picker-j.git
+cd server-picker-j
+dotnet restore ServerPickerX.slnx
+dotnet publish ServerPickerX/ServerPickerX.csproj -c Release -r win-x64
+```
+
+Use `linux-x64` for Linux. Output lands in
+`ServerPickerX/bin/Release/net10.0/<runtime>/publish/`.
+
+Run the tests with `dotnet test ServerPickerX.Tests.slnx`.
+
+## Credit and licence
+
+Based on [server-picker-x](https://github.com/FN-FAL113/server-picker-x) by
+FN-FAL113, licensed **GPL-3.0**. This fork keeps that licence, and the full
+commit history of the original project is preserved in this repository.
+
+Parts of this fork were written with AI assistance. Everything in it has been
+built, run and tested on multiple machines before release.
+
+## Disclaimer
+
+Not affiliated with, authorised by, or endorsed by Valve or its subsidiaries.
+Trademarks belong to their respective owners.
