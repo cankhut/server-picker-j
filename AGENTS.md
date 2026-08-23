@@ -11,6 +11,27 @@ a single file `<PublishSingleFile>true</PublishSingleFile>` and it can run indep
 The code follows the MVVM pattern with ViewModels exposed through `Microsoft.Extensions.DependencyInjection` specifically a 
 static singleton IoC service container in `App.axaml.cs`.
 
+## Fork Notes
+This repository is a fork of [server-picker-x](https://github.com/FN-FAL113/server-picker-x) by FN-FAL113.
+It replaces the server table with a card grid, adds light/dark themes, preset share codes, auto refresh and
+tray support. The following are specific to this codebase and are not obvious from reading it:
+
+- **Firewall rules outlive the process.** They are not tied to the app's lifetime, so blocked servers stay
+blocked after the app closes, after a reboot and after the app is deleted. Any feature touching blocked state
+must treat the saved state as possibly stale, which is what `ReconcileBlockedStateAsync` is for.
+- **Never wipe the whole firewall.** `netsh advfirewall reset` and `iptables -F` destroy every rule on the
+machine, including rules other applications depend on. Both were used here previously and both were removed
+deliberately. Remove rules by the `server_picker_x_` name prefix on Windows and by explicit `-D` deletion on Linux.
+- **A blocked server cannot be pinged.** The rule blocks all protocols, so ICMP goes with it and every probe
+fails. The ping sweep skips blocked servers, and `RestoreReading` keeps the last good reading instead of
+blanking it. Blanking it gives every blocked server the same sort key.
+- **Trimming is fragile**, as the csproj comment says. Reflection based code can compile and then fail only in
+a published build, so test the publish output rather than a debug run.
+- **Locale keys live in nine files** under `Locales/`. A key added to one must be added to all nine, and
+nothing checks this at compile time.
+- **Avalonia 12 moved some APIs.** For example `IClipboard` is in `Avalonia.Input.Platform` and reading text is
+`TryGetTextAsync()`, not `GetTextAsync()`. Check the Avalonia 12 docs rather than assuming Avalonia 11 signatures.
+
 ## Build / Publish Guidelines
 ```bash
 # Clean and build (debug)
@@ -89,6 +110,7 @@ dotnet test --filter "FullyQualifiedName=ServerPickerX.Models.ServerModelTests.P
 - [ ] All tests pass (`dotnet test ServerPickerX.Tests.slnx`).
 - [ ] Code passes linting (`dotnet format ServerPickerX.slnx --verify-no-changes`).
 - [ ] Publish output contains an executable and other dependencies.
+- [ ] The published build was run, not just the debug build.
 
 ## Other Instructions
 - If you are unsure how to do something, use `gh_grep` tools to search code examples from GitHub or use `context7` tools to search for project/code documentations
