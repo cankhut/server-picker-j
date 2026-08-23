@@ -16,9 +16,9 @@ namespace ServerPickerX.Services.Versions
     public class VersionService : IVersionService
     {
         // This fork publishes its own builds, so updates are checked against it
-        private const string ReleasesApiUrl = "https://api.github.com/repos/cankhut/server-picker-x/releases";
+        private const string ReleasesApiUrl = "https://api.github.com/repos/cankhut/server-picker-j/releases";
 
-        private const string ReleasesPageUrl = "https://github.com/cankhut/server-picker-x/releases";
+        private const string ReleasesPageUrl = "https://github.com/cankhut/server-picker-j/releases";
 
         private readonly ILoggerService _logger;
         private readonly IMessageBoxService _messageBoxService;
@@ -51,7 +51,7 @@ namespace ServerPickerX.Services.Versions
             // The client is a singleton, adding the header twice throws
             if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
             {
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", "server-picker-x");
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", "server-picker-j");
             }
 
             try
