@@ -214,8 +214,7 @@ namespace ServerPickerX.Tests.ViewModels
             Assert.True(result);
             foreach (var server in _vm.ServerModels)
             {
-                Assert.Empty(server.Ping);
-                Assert.Equal(ServerModel.StatusDown, server.Status);
+                Assert.True(server.IsBlocked);
             }
         }
 
@@ -272,10 +271,10 @@ namespace ServerPickerX.Tests.ViewModels
             {
                 if (item.index is 0 or 2)
                 {
-                    Assert.Equal(ServerModel.StatusDown, item.value.Status);
+                    Assert.True(item.value.IsBlocked);
                 } else
                 {
-                    Assert.Equal(ServerModel.StatusUp, item.value.Status);
+                    Assert.False(item.value.IsBlocked);
                 }
             }
         }
@@ -428,9 +427,37 @@ namespace ServerPickerX.Tests.ViewModels
             Assert.True(result);
             foreach (var srv in serverModels)
             {
-                Assert.Empty(srv.Ping);
-                Assert.Equal(ServerModel.StatusDown, srv.Status);
+                Assert.True(srv.IsBlocked);
             }
+        }
+
+        // A blocked server drops every probe, so the reading taken before it was
+        // blocked is kept rather than replaced with a row of timeouts. Without this
+        // every blocked server sorts as though it had no ping at all
+        [Fact]
+        public async Task Test_PingServer_BlockedServerKeepsLastReading()
+        {
+            // Arrange
+            ServerModel serverModel = new()
+            {
+                Name = "server_id 1",
+                Description = "Server1 (Sweden)",
+                RelayModels = [new RelayModel { IPv4 = "127.0.0.1" }]
+            };
+
+            await serverModel.PingServerAsync();
+
+            string? readingBeforeBlocking = serverModel.Ping;
+
+            // Act - clearing the relays stands in for the firewall dropping the probes
+            serverModel.IsBlocked = true;
+            serverModel.RelayModels.Clear();
+
+            await serverModel.PingServerAsync();
+
+            // Assert
+            Assert.False(string.IsNullOrEmpty(readingBeforeBlocking));
+            Assert.Equal(readingBeforeBlocking, serverModel.Ping);
         }
 
         [Fact]

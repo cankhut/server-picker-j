@@ -642,8 +642,17 @@ namespace ServerPickerX.ViewModels
         // app's back leaves a card showing blocked while traffic flows normally
         private async Task ReconcileBlockedStateAsync()
         {
-            List<ServerModel>? blockedServerModels = await _systemFirewallService
+            // A mocked or partially implemented firewall service can hand back nothing
+            // at all, which must not take the whole load path down with it
+            Task<List<ServerModel>?>? blockedServersTask = _systemFirewallService
                 .GetBlockedServersAsync(new ObservableCollection<ServerModel>(ServerModels));
+
+            if (blockedServersTask == null)
+            {
+                return;
+            }
+
+            List<ServerModel>? blockedServerModels = await blockedServersTask;
 
             if (blockedServerModels == null)
             {
