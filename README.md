@@ -61,6 +61,16 @@ A lightweight server picker for Counter Strike and Deadlock with cross-platform 
 The script adds the execute permission and launches the app with sudo on the
 current shell. Don't run the binary directly with `sudo`.
 
+## Updating
+
+Download the latest release, open the zip, and copy the files inside it into your
+existing Server Picker folder, overwriting when Windows asks. That's the whole update procedure.
+
+Your `settings.json` isn't in the zip, so your blocked servers, presets, theme and
+language all stay exactly as they were.
+
+Close the app first, Windows won't let you overwrite files that are still running.
+
 ## Blocking persists after you close the app
 
 Blocking a server creates a Windows Firewall rule (or an iptables rule on Linux). 

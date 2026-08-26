@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">解除全部并关闭</x:String>
   <x:String x:Key="BlockedOnExitKeep">仍要关闭</x:String>
   <x:String x:Key="BlockedOnExitCancel">取消</x:String>
+  <x:String x:Key="RenderMode">渲染模式：</x:String>
+  <x:String x:Key="RenderModeToolTip">通过使用不同的图形管线，改变应用程序在屏幕上的渲染方式。</x:String>
+  <x:String x:Key="RenderModeDialogue">重新启动应用程序以使更改生效。</x:String>
 </ResourceDictionary>

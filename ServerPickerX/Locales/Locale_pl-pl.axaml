@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">Odblokuj wszystko i zamknij</x:String>
   <x:String x:Key="BlockedOnExitKeep">Zamknij mimo to</x:String>
   <x:String x:Key="BlockedOnExitCancel">Anuluj</x:String>
+  <x:String x:Key="RenderMode">Tryb renderowania:</x:String>
+  <x:String x:Key="RenderModeToolTip">Zmień sposób renderowania aplikacji na ekranie, korzystając z innego potoku graficznego.</x:String>
+  <x:String x:Key="RenderModeDialogue">Uruchom ponownie aplikację, aby zmiany weszły w życie.</x:String>
 </ResourceDictionary>

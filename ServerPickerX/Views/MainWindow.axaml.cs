@@ -409,8 +409,8 @@ namespace ServerPickerX.Views
         {
             _isExiting = true;
 
-            DisposeTrayIcon();
-
+            // The tray icon is disposed on the real close path, not here, so a
+            // cancelled exit does not leave the app hidden with no way back to it
             Close();
         }
 
@@ -432,6 +432,10 @@ namespace ServerPickerX.Views
                 && viewModel.BlockedServerCount > 0)
             {
                 e.Cancel = true;
+
+                // Quitting from the tray leaves the window hidden, and a dialog owned
+                // by a hidden window never reaches the user
+                RestoreFromTray();
 
                 _ = ConfirmExitWithBlockedServersAsync(viewModel);
 
@@ -461,9 +465,12 @@ namespace ServerPickerX.Views
                 MsBox.Avalonia.Enums.Icon.Warning
                 );
 
-            // Dismissing the dialog leaves the app open rather than guessing
+            // Dismissing the dialog leaves the app open rather than guessing, and the
+            // pending exit is cancelled so closing the window still minimises to tray
             if (choice != keepBlocked && choice != unblockAll)
             {
+                _isExiting = false;
+
                 return;
             }
 

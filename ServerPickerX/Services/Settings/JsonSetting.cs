@@ -27,6 +27,8 @@ namespace ServerPickerX.Settings
 
         public virtual string game_mode { set; get; } = "Counter Strike 2";
 
+        public virtual string render_mode { set; get; } = "Software (CPU)";
+
         public virtual string language { set; get; } = "English | en-us";
 
         // "System" follows the OS setting, "Light" and "Dark" pin it
@@ -103,6 +105,7 @@ namespace ServerPickerX.Settings
                 JsonSetting localSettings = await JsonSerializer.DeserializeAsync<JsonSetting>(settingsFile, serializerOptions) ?? this;
 
                 game_mode = localSettings.game_mode;
+                render_mode = localSettings.render_mode;
                 language = localSettings.language;
                 theme = string.IsNullOrWhiteSpace(localSettings.theme) ? "System" : localSettings.theme;
                 server_revisions = localSettings.server_revisions != null
@@ -209,6 +212,13 @@ namespace ServerPickerX.Settings
         public async Task SetLanguageAsync(string language)
         {
             this.language = language;
+
+            await this.SaveSettingsAsync();
+        }
+
+        public async Task SetRenderModeAsync(string renderMode)
+        {
+            this.render_mode = renderMode;
 
             await this.SaveSettingsAsync();
         }

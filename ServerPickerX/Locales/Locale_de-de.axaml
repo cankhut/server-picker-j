@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">Alle freigeben und schließen</x:String>
   <x:String x:Key="BlockedOnExitKeep">Trotzdem schließen</x:String>
   <x:String x:Key="BlockedOnExitCancel">Abbrechen</x:String>
+  <x:String x:Key="RenderMode">Render-Modus:</x:String>
+  <x:String x:Key="RenderModeToolTip">Ändern Sie die Art und Weise, wie die App auf dem Bildschirm gerendert wird, indem Sie eine andere Grafik-Pipeline verwenden.</x:String>
+  <x:String x:Key="RenderModeDialogue">Starten Sie die Anwendung neu, damit die Änderungen wirksam werden.</x:String>
 </ResourceDictionary>

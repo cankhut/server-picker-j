@@ -10,7 +10,7 @@
     x:DataType="viewmodels:SettingsWindowViewModel"
     x:Name="Settings"
     Width="420"
-    Height="380"
+    Height="430"
     Title="Settings"
     WindowDecorations="BorderOnly"
     ExtendClientAreaToDecorationsHint="True"
@@ -81,6 +81,19 @@
                         <ComboBoxItem Content="{DynamicResource ThemeLight}" />
                         <ComboBoxItem Content="{DynamicResource ThemeDark}" />
                     </ComboBox>
+                </Grid>
+
+                <Grid ColumnDefinitions="110,*" VerticalAlignment="Center">
+                    <TextBlock Classes="muted"
+                               VerticalAlignment="Center"
+                               Text="{DynamicResource RenderMode}" />
+                    <ComboBox x:Name="RenderModeComboBox"
+                              Grid.Column="1"
+                              Classes="game-combobox"
+                              HorizontalAlignment="Stretch"
+                              SelectionChanged="RenderModeComboBox_SelectionChanged"
+                              ToolTip.Tip="{DynamicResource RenderModeToolTip}"
+                              ToolTip.ShowDelay="300" />
                 </Grid>
 
                 <Grid ColumnDefinitions="110,*" VerticalAlignment="Center">

@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">Unblock all and close</x:String>
   <x:String x:Key="BlockedOnExitKeep">Close anyway</x:String>
   <x:String x:Key="BlockedOnExitCancel">Cancel</x:String>
+  <x:String x:Key="RenderMode">Render Mode:</x:String>
+  <x:String x:Key="RenderModeToolTip">Change how the app is rendered on the screen by using different graphics pipeline.</x:String>
+  <x:String x:Key="RenderModeDialogue">Restart the application for the changes to take effect.</x:String>
 </ResourceDictionary>

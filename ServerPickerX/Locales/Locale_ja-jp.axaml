@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">すべて解除して終了</x:String>
   <x:String x:Key="BlockedOnExitKeep">このまま終了</x:String>
   <x:String x:Key="BlockedOnExitCancel">キャンセル</x:String>
+  <x:String x:Key="RenderMode">レンダリングモード:</x:String>
+  <x:String x:Key="RenderModeToolTip">異なるグラフィックスパイプラインを使用して、画面上でのアプリの描画方法を変更します。</x:String>
+  <x:String x:Key="RenderModeDialogue">変更を適用するには、アプリケーションを再起動してください。</x:String>
 </ResourceDictionary>

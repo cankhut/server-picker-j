@@ -57,3 +57,6 @@ nunit-*.xml
 settings.json
 ServerPickerX/ServerPickerX.csproj.Backup.tmp
 .aider*
+
+# Rider
+.idea/

@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">Tümünü aç ve kapat</x:String>
   <x:String x:Key="BlockedOnExitKeep">Yine de kapat</x:String>
   <x:String x:Key="BlockedOnExitCancel">Vazgeç</x:String>
+  <x:String x:Key="RenderMode">Oluşturma Modu:</x:String>
+  <x:String x:Key="RenderModeToolTip">Farklı bir grafik işlem hattı kullanarak uygulamanın ekranda oluşturulma şeklini değiştirin.</x:String>
+  <x:String x:Key="RenderModeDialogue">Değişikliklerin geçerli olması için uygulamayı yeniden başlatın.</x:String>
 </ResourceDictionary>

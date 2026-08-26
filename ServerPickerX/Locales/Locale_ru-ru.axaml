@@ -89,4 +89,7 @@
   <x:String x:Key="BlockedOnExitUnblock">Разблокировать все и закрыть</x:String>
   <x:String x:Key="BlockedOnExitKeep">Всё равно закрыть</x:String>
   <x:String x:Key="BlockedOnExitCancel">Отмена</x:String>
+  <x:String x:Key="RenderMode">Режим отрисовки:</x:String>
+  <x:String x:Key="RenderModeToolTip">Измените способ отрисовки приложения на экране, используя другой графический конвейер.</x:String>
+  <x:String x:Key="RenderModeDialogue">Перезапустите приложение, чтобы изменения вступили в силу.</x:String>
 </ResourceDictionary>
