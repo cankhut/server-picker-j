@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">渲染模式：</x:String>
   <x:String x:Key="RenderModeToolTip">通过使用不同的图形管线，改变应用程序在屏幕上的渲染方式。</x:String>
   <x:String x:Key="RenderModeDialogue">重新启动应用程序以使更改生效。</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">游戏启动时应用预设</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">游戏启动时应用该游戏最近使用的预设，游戏关闭后解除所有封锁</x:String>
 </ResourceDictionary>

@@ -56,8 +56,12 @@ namespace ServerPickerX.Settings
 
         public virtual bool minimize_to_tray { get; set; } = false;
 
+        // Applies this game's last used preset when the game starts and unblocks
+        // again when it exits, opt in and off by default
+        public virtual bool auto_apply_on_game_launch { get; set; } = false;
+
         [JsonIgnore]
-        public readonly string jsonFilePath = "./settings.json";
+        public readonly string jsonFilePath = ResolveSettingsPath();
 
         [JsonIgnore]
         public readonly JsonSerializerOptions serializerOptions = new()
@@ -71,6 +75,36 @@ namespace ServerPickerX.Settings
         private IMessageBoxService _messageBoxService { get; set; }
         [JsonIgnore]
         private ILoggerService _loggerService { get; set; }
+
+        // The settings file belongs next to the executable, not in whatever directory
+        // the process happened to start in. A shortcut without a working directory or
+        // an elevated launch can hand the app a cwd such as C:\Windows\System32, and the
+        // settings would silently be written and read there instead
+        private static string ResolveSettingsPath()
+        {
+            string settingsPath = Path.Combine(AppContext.BaseDirectory, "settings.json");
+
+            try
+            {
+                string legacyPath = Path.GetFullPath("./settings.json");
+
+                bool hasLegacySettingsToMove = !File.Exists(settingsPath)
+                    && File.Exists(legacyPath)
+                    && !string.Equals(legacyPath, settingsPath, StringComparison.OrdinalIgnoreCase);
+
+                if (hasLegacySettingsToMove)
+                {
+                    File.Move(legacyPath, settingsPath);
+                }
+            }
+            catch (Exception)
+            {
+                // A migration that cannot happen is not worth failing startup over.
+                // The app carries on with fresh settings in the correct place
+            }
+
+            return settingsPath;
+        }
 
         public JsonSetting() {}
 
@@ -119,6 +153,7 @@ namespace ServerPickerX.Settings
                     : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 auto_refresh_minutes = localSettings.auto_refresh_minutes;
                 minimize_to_tray = localSettings.minimize_to_tray;
+                auto_apply_on_game_launch = localSettings.auto_apply_on_game_launch;
                 last_server_readings = localSettings.last_server_readings != null
                     ? new Dictionary<string, Dictionary<string, string>>(localSettings.last_server_readings, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
@@ -309,6 +344,13 @@ namespace ServerPickerX.Settings
         public async Task SetMinimizeToTrayAsync(bool enabled)
         {
             minimize_to_tray = enabled;
+
+            await SaveSettingsAsync();
+        }
+
+        public async Task SetAutoApplyOnGameLaunchAsync(bool enabled)
+        {
+            auto_apply_on_game_launch = enabled;
 
             await SaveSettingsAsync();
         }

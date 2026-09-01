@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Oluşturma Modu:</x:String>
   <x:String x:Key="RenderModeToolTip">Farklı bir grafik işlem hattı kullanarak uygulamanın ekranda oluşturulma şeklini değiştirin.</x:String>
   <x:String x:Key="RenderModeDialogue">Değişikliklerin geçerli olması için uygulamayı yeniden başlatın.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Oyun başlayınca ön ayarı uygula</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Oyun açıldığında bu oyunun son kullanılan ön ayarını uygular, oyun kapandığında tüm engelleri kaldırır</x:String>
 </ResourceDictionary>

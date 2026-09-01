@@ -47,6 +47,7 @@ A lightweight server picker for Counter Strike and Deadlock with cross-platform 
 - Right click a card to block every server at least as slow as it
 - Presets can be shared as a short code and imported from your clipboard
 - Optional auto refresh and optional close to system tray under settings tab
+- Optionally applies your last used preset when the game launches, and unblocks everything again when it closes
 
 ## Install
 

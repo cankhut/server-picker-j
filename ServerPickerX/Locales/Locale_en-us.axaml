@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Render Mode:</x:String>
   <x:String x:Key="RenderModeToolTip">Change how the app is rendered on the screen by using different graphics pipeline.</x:String>
   <x:String x:Key="RenderModeDialogue">Restart the application for the changes to take effect.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Apply preset when the game starts</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Applies this game's last used preset when the game launches, and unblocks everything again when it closes</x:String>
 </ResourceDictionary>

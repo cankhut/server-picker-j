@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Tryb renderowania:</x:String>
   <x:String x:Key="RenderModeToolTip">Zmień sposób renderowania aplikacji na ekranie, korzystając z innego potoku graficznego.</x:String>
   <x:String x:Key="RenderModeDialogue">Uruchom ponownie aplikację, aby zmiany weszły w życie.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Zastosuj zestaw przy starcie gry</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Stosuje ostatnio używany zestaw tej gry przy jej uruchomieniu i odblokowuje wszystko po jej zamknięciu</x:String>
 </ResourceDictionary>

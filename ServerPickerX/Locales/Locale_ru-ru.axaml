@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Режим отрисовки:</x:String>
   <x:String x:Key="RenderModeToolTip">Измените способ отрисовки приложения на экране, используя другой графический конвейер.</x:String>
   <x:String x:Key="RenderModeDialogue">Перезапустите приложение, чтобы изменения вступили в силу.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Применять пресет при запуске игры</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Применяет последний использованный пресет этой игры при запуске и снимает все блокировки при выходе</x:String>
 </ResourceDictionary>

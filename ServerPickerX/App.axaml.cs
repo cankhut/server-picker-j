@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using ServerPickerX.Services.Games;
 using ServerPickerX.Services.Localizations;
 using ServerPickerX.Services.Loggers;
 using ServerPickerX.Services.MessageBoxes;
@@ -39,6 +40,7 @@ namespace ServerPickerX
             serviceCollection.AddSingleton<IMessageBoxService, MessageBoxService>();
             serviceCollection.AddSingleton<IProcessService, ProcessService>();
             serviceCollection.AddSingleton<ILocalizationService, LocalizationService>();
+            serviceCollection.AddSingleton<IGameProcessService, GameProcessService>();
             serviceCollection.AddSingleton<IVersionService, VersionService>();
             serviceCollection.AddSingleton<JsonSetting>();
             serviceCollection.AddSingleton<HttpClient>();

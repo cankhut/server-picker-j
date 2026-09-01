@@ -6,6 +6,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using ServerPickerX.Models;
 using ServerPickerX.Services.DependencyInjection;
+using ServerPickerX.Services.Games;
 using ServerPickerX.Services.Localizations;
 using ServerPickerX.Services.Loggers;
 using ServerPickerX.Services.MessageBoxes;
@@ -41,9 +42,18 @@ namespace ServerPickerX.Views
         private bool _suppressPresetSelectionChanged;
         private PresetModel? _previousPreset;
         private DispatcherTimer? _autoRefreshTimer;
+        private DispatcherTimer? _gameWatcherTimer;
         private TrayIcon? _trayIcon;
         private bool _isExiting;
         private bool _blockedExitPromptAnswered;
+
+        // Game watcher state. The game mode is captured when the watcher starts so a
+        // switch mid session restarts it instead of matching one game's process
+        // against another game's preset
+        private string _gameWatcherGameMode = string.Empty;
+        private bool _gameWasRunning;
+        private bool _gameWatcherApplied;
+        private bool _gameWatcherBusy;
 
         private readonly ILoggerService _loggerService;
         private readonly JsonSetting _jsonSetting;
@@ -51,6 +61,7 @@ namespace ServerPickerX.Views
         private readonly IVersionService _versionService;
         private readonly ILocalizationService _localizationService;
         private readonly ServerDefinitionProvider _serverDefinitionProvider;
+        private readonly IGameProcessService _gameProcessService;
 
         // Parameterless constructor, allows design previewer to create its own instance since it doesn't support DI
         public MainWindow()
@@ -64,6 +75,7 @@ namespace ServerPickerX.Views
             _versionService = ServiceLocator.GetRequiredService<IVersionService>();
             _localizationService = ServiceLocator.GetRequiredService<ILocalizationService>();
             _serverDefinitionProvider = ServiceLocator.GetRequiredService<ServerDefinitionProvider>();
+            _gameProcessService = ServiceLocator.GetRequiredService<IGameProcessService>();
         }
 
         // DI constructor, allows inversion of control and unit tests mocking
@@ -84,6 +96,7 @@ namespace ServerPickerX.Views
             _jsonSetting = jsonSetting;
             _localizationService = localizationService;
             _serverDefinitionProvider = ServiceLocator.GetRequiredService<ServerDefinitionProvider>();
+            _gameProcessService = ServiceLocator.GetRequiredService<IGameProcessService>();
         }
 
         private async void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -293,6 +306,7 @@ namespace ServerPickerX.Views
 
             ConfigureAutoRefresh();
             ConfigureTrayIcon();
+            ConfigureGameWatcher();
 
             await _versionService.CheckVersionAsync();
         }
@@ -339,6 +353,138 @@ namespace ServerPickerX.Views
             }
 
             _ = vm.PingServersAsync(vm.ServerModels);
+        }
+
+        // Watches for the current game starting and stopping so the preset the user
+        // last picked is applied on launch and taken back off on exit
+        public void ConfigureGameWatcher()
+        {
+            if (_gameWatcherTimer != null)
+            {
+                _gameWatcherTimer.Stop();
+                _gameWatcherTimer.Tick -= GameWatcherTimer_Tick;
+                _gameWatcherTimer = null;
+            }
+
+            _gameWatcherApplied = false;
+            _gameWatcherBusy = false;
+
+            if (!_jsonSetting.auto_apply_on_game_launch)
+            {
+                return;
+            }
+
+            _gameWatcherGameMode = _jsonSetting.game_mode;
+
+            // Seed the state from the current reality, so a game that is already running
+            // when the watcher starts is not mistaken for a launch that just happened
+            _gameWasRunning = _gameProcessService.IsGameRunning(_gameWatcherGameMode);
+
+            _gameWatcherTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+
+            _gameWatcherTimer.Tick += GameWatcherTimer_Tick;
+            _gameWatcherTimer.Start();
+        }
+
+        private void GameWatcherTimer_Tick(object? sender, EventArgs e)
+        {
+            _ = HandleGameWatcherTickAsync();
+        }
+
+        private async Task HandleGameWatcherTickAsync()
+        {
+            // One tick at a time, a firewall pass easily outlasts the interval
+            if (_gameWatcherBusy || DataContext is not MainWindowViewModel vm)
+            {
+                return;
+            }
+
+            if (!_gameWatcherGameMode.Equals(_jsonSetting.game_mode, StringComparison.OrdinalIgnoreCase))
+            {
+                ConfigureGameWatcher();
+
+                return;
+            }
+
+            bool isRunning = _gameProcessService.IsGameRunning(_gameWatcherGameMode);
+
+            if (isRunning == _gameWasRunning)
+            {
+                return;
+            }
+
+            // Wait for the app to go idle rather than queueing firewall work behind a
+            // running operation. The transition is still there on the next tick
+            if (!vm.ServersLoaded || !vm.IsOperationAllowed)
+            {
+                return;
+            }
+
+            _gameWatcherBusy = true;
+
+            try
+            {
+                if (isRunning)
+                {
+                    await ApplyPresetForGameLaunchAsync(vm);
+                }
+                else if (_gameWatcherApplied)
+                {
+                    // Only ever undo what this watcher did itself. Blocks the user made
+                    // by hand are theirs to remove, the app does not clear them silently
+                    _gameWatcherApplied = false;
+
+                    await vm.UnblockAllAsync(shouldClearLastSelectedPreset: false);
+
+                    SyncPresetSelection(vm.SelectedPreset);
+
+                    await _loggerService.LogInfoAsync($"Auto apply unblocked all servers after {_gameWatcherGameMode} closed");
+                }
+
+                _gameWasRunning = isRunning;
+            }
+            finally
+            {
+                _gameWatcherBusy = false;
+            }
+        }
+
+        private async Task ApplyPresetForGameLaunchAsync(MainWindowViewModel vm)
+        {
+            string presetName = _jsonSetting.GetLastSelectedPresetNameByGameMode();
+
+            // Nothing to apply is a normal state, not an error. The user simply has not
+            // picked a preset for this game yet
+            if (string.IsNullOrWhiteSpace(presetName))
+            {
+                return;
+            }
+
+            PresetModel? preset = vm.GetCurrentGamePreset(presetName);
+
+            if (preset == null)
+            {
+                return;
+            }
+
+            bool presetApplied = await vm.ApplyPresetAsync(preset);
+
+            if (!presetApplied)
+            {
+                await _loggerService.LogWarningAsync($"Auto apply could not apply preset '{presetName}' on game launch");
+
+                return;
+            }
+
+            _gameWatcherApplied = true;
+
+            SyncPresetSelection(vm.SelectedPreset);
+            RefreshClusterButtonContent();
+
+            await _loggerService.LogInfoAsync($"Auto apply applied preset '{presetName}' after {_gameWatcherGameMode} started");
         }
 
         public void ConfigureTrayIcon()
@@ -443,6 +589,7 @@ namespace ServerPickerX.Views
             }
 
             _autoRefreshTimer?.Stop();
+            _gameWatcherTimer?.Stop();
 
             DisposeTrayIcon();
 

@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Renderingsläge:</x:String>
   <x:String x:Key="RenderModeToolTip">Ändra hur appen renderas på skärmen genom att använda en annan grafikpipeline.</x:String>
   <x:String x:Key="RenderModeDialogue">Starta om programmet för att ändringarna ska träda i kraft.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Använd förinställning när spelet startar</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Använder spelets senast använda förinställning när det startar och avblockerar allt när det stängs</x:String>
 </ResourceDictionary>

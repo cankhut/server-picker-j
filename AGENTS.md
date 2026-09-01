@@ -25,6 +25,13 @@ deliberately. Remove rules by the `server_picker_x_` name prefix on Windows and 
 - **A blocked server cannot be pinged.** The rule blocks all protocols, so ICMP goes with it and every probe
 fails. The ping sweep skips blocked servers, and `RestoreReading` keeps the last good reading instead of
 blanking it. Blanking it gives every blocked server the same sort key.
+- **Settings live next to the executable.** `JsonSetting.ResolveSettingsPath` resolves `settings.json`
+against `AppContext.BaseDirectory`, not the working directory, because a shortcut without a working
+directory or an elevated launch can hand the process an unrelated cwd. Anything else the app writes
+belongs next to the executable for the same reason.
+- **Auto apply only undoes its own work.** The game watcher unblocks on exit only when it applied a
+preset on launch, tracked by `_gameWatcherApplied`. Blocks the user made by hand are never cleared
+silently.
 - **Trimming is fragile**, as the csproj comment says. Reflection based code can compile and then fail only in
 a published build, so test the publish output rather than a debug run.
 - **Locale keys live in nine files** under `Locales/`. A key added to one must be added to all nine, and

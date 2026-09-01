@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Render-Modus:</x:String>
   <x:String x:Key="RenderModeToolTip">Ändern Sie die Art und Weise, wie die App auf dem Bildschirm gerendert wird, indem Sie eine andere Grafik-Pipeline verwenden.</x:String>
   <x:String x:Key="RenderModeDialogue">Starten Sie die Anwendung neu, damit die Änderungen wirksam werden.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Voreinstellung beim Spielstart anwenden</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Wendet beim Spielstart die zuletzt genutzte Voreinstellung dieses Spiels an und hebt beim Beenden alle Sperren wieder auf</x:String>
 </ResourceDictionary>

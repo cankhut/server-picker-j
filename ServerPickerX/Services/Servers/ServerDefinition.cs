@@ -13,6 +13,9 @@ namespace ServerPickerX.Services.Servers
         public List<string> Keywords { get; set; } = [];
         public List<string> ClusterKeywords { get; set; } = [];
         public string ResponseUrlTemplate { get; set; } = "https://api.steampowered.com/ISteamApps/GetSDRConfig/v1/?appid={0}";
+        // Optional override for the process names watched by auto apply on game launch,
+        // without the .exe suffix. Empty means the built in names for this app id are used
+        public List<string> ProcessNames { get; set; } = [];
     }
     public class ServerData
     {

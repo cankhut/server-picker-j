@@ -69,6 +69,8 @@ public partial class SettingsWindow : Window
 
         MinimizeToTraySetting.IsChecked = _jsonSetting.minimize_to_tray;
 
+        AutoApplyOnGameLaunchSetting.IsChecked = _jsonSetting.auto_apply_on_game_launch;
+
         RenderModeComboBox.ItemsSource = ResolveRenderModeValues();
 
         RenderModeComboBox.SelectionChanged -= RenderModeComboBox_SelectionChanged;
@@ -125,6 +127,15 @@ public partial class SettingsWindow : Window
             30 => 3,
             _ => 0,
         };
+    }
+
+    private async void AutoApplyOnGameLaunchSetting_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        bool enabled = AutoApplyOnGameLaunchSetting.IsChecked == true;
+
+        await _jsonSetting.SetAutoApplyOnGameLaunchAsync(enabled);
+
+        Views.MainWindow.Instance?.ConfigureGameWatcher();
     }
 
     private async void MinimizeToTraySetting_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

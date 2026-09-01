@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">Modo de renderizado:</x:String>
   <x:String x:Key="RenderModeToolTip">Modifica la forma en que se renderiza la aplicación en pantalla mediante el uso de una canalización gráfica diferente.</x:String>
   <x:String x:Key="RenderModeDialogue">Reinicia la aplicación para que los cambios surtan efecto.</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">Aplicar preajuste al iniciar el juego</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">Aplica el último preajuste usado en este juego al iniciarlo y desbloquea todo cuando se cierra</x:String>
 </ResourceDictionary>

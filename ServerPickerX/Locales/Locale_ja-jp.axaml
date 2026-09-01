@@ -92,4 +92,6 @@
   <x:String x:Key="RenderMode">レンダリングモード:</x:String>
   <x:String x:Key="RenderModeToolTip">異なるグラフィックスパイプラインを使用して、画面上でのアプリの描画方法を変更します。</x:String>
   <x:String x:Key="RenderModeDialogue">変更を適用するには、アプリケーションを再起動してください。</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchLabel">ゲーム起動時にプリセットを適用</x:String>
+  <x:String x:Key="AutoApplyOnGameLaunchToolTip">このゲームで最後に使用したプリセットを起動時に適用し、終了時にすべてのブロックを解除します</x:String>
 </ResourceDictionary>

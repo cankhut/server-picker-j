@@ -10,7 +10,7 @@
     x:DataType="viewmodels:SettingsWindowViewModel"
     x:Name="Settings"
     Width="420"
-    Height="430"
+    Height="462"
     Title="Settings"
     WindowDecorations="BorderOnly"
     ExtendClientAreaToDecorationsHint="True"
@@ -120,6 +120,12 @@
                           ToolTip.Tip="{DynamicResource MinimizeToTrayToolTip}"
                           ToolTip.ShowDelay="300"
                           Click="MinimizeToTraySetting_Click" />
+
+                <CheckBox x:Name="AutoApplyOnGameLaunchSetting"
+                          Content="{DynamicResource AutoApplyOnGameLaunchLabel}"
+                          ToolTip.Tip="{DynamicResource AutoApplyOnGameLaunchToolTip}"
+                          ToolTip.ShowDelay="300"
+                          Click="AutoApplyOnGameLaunchSetting_Click" />
 
                 <Grid ColumnDefinitions="110,*" VerticalAlignment="Center">
                     <Button Grid.Column="1"
